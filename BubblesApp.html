@@ -1,0 +1,139 @@
+
+<html>
+    <head>
+        <title>Bubbles App</title>
+
+        <style type = "text/css">
+            .bubble-button{
+                background: none;
+                box-shadow: 3px 3px 3px 3px rgba(0,0,0,0.5);
+                border: 1px solif rgba(0,0,0,0.6);
+                width:80px;
+                height:30px;
+                margin-right:25%;
+                margin-top:10px;
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <div width="100%" style="text-align:center;">
+            <h2>Bubbles App</h2>
+            <canvas id="Canvas" width="800" height="450" style="border:2px solid black;">
+            </canvas>
+        </div>
+
+        <div style="text-align:right;">
+            <button onclick="App()"  class="bubble-button">
+                Reset
+            </button>
+        </div>
+
+        <script>
+            function App()
+            {
+                var colors = ["yellow","blue","red","green"];
+                var isAnimationComplete = Array(colors.length).fill(false);
+                var canvas = document.getElementById("Canvas");
+                var context = canvas.getContext("2d");
+                var radius = 40;
+                var index = 0;
+                var xCenter = 95;
+                var yCenter = 70;
+
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+                function getCenter(x, y)
+                {
+                    if((x<=xCenter && x>=(xCenter-radius)) || (x>=xCenter && x<=(xCenter+radius)))
+                    {
+                        for(let i=0;i<colors.length;i++)
+                        {
+                            let center = yCenter+(i*100);
+                            if((y<=center && y>=center-radius) || (y>=center && y<=center+radius)){
+                                index = i;
+                                return center;
+                            }
+                        }
+                    }
+                    return -1;
+                }
+
+                function drawCircles(){    
+                    for(var i=0;i<colors.length;i++)
+                    {
+                        context.beginPath();
+                        context.arc(xCenter,yCenter+(i*100),radius,0,2*Math.PI);
+                        context.fillStyle = colors[i];
+                        context.fill();
+                        context.stroke();
+                    }
+                }
+
+                context.lineWidth = 1;
+
+                for(var i=0;i<colors.length;i++)
+                {
+                    context.beginPath();
+                    drawArrow(context, i, 610);
+                    context.stroke();
+                }
+
+                function drawArrow(context, i, startIndex)
+                {
+                    endIndex = startIndex + 90;
+                    context.moveTo(startIndex+15, yCenter+(i*100));
+                    context.lineTo(endIndex, yCenter+(i*100));
+                    context.moveTo(startIndex, yCenter+(i*100));
+                    context.lineTo(startIndex+15, yCenter+(i*100)-10);
+                    context.lineTo(startIndex+15, yCenter+(i*100)+10);
+                    context.lineTo(startIndex, yCenter+(i*100));
+                    context.fillStyle = "black";
+                    context.fill();
+                }
+
+                
+                canvas.addEventListener("click",onBubbleClick);
+
+                function onBubbleClick(event)
+                {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+                    let centerY = getCenter(x, y);
+                    if(centerY != -1 && !isAnimationComplete[index]){
+                        document.querySelector('.bubble-button').disabled = true;
+                        beginAnimation(centerY);
+                    }
+                }
+                
+
+                async function beginAnimation(yAxis)
+                {
+                    canvas.removeEventListener("click",onBubbleClick);
+                    let tipIndex = 609;
+                    while(tipIndex > (xCenter+radius))
+                    {
+                        await new Promise((resolve) => {setTimeout(() => {
+                        context.clearRect(tipIndex, yAxis-15, 100, 50);
+                        context.beginPath();
+                        drawArrow(context, index, tipIndex)
+                        context.stroke();
+                        if(tipIndex == xCenter+radius+1){colors[index] = "grey"; drawCircles()};
+                        resolve(true)})});
+                        tipIndex--;
+                    }
+                    isAnimationComplete[index] = true;
+                    canvas.addEventListener("click",onBubbleClick);
+                    document.querySelector('.bubble-button').disabled = false;
+                }
+
+                drawCircles();
+            }
+            App();
+
+        </script>
+    </body>
+</html>
+
